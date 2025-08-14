@@ -1,7 +1,7 @@
-# DesktopToolAssistant
+# Desktop Tool Assistant
 
 ## 项目简介
-DesktopToolAssistant 是一个集成虚拟角色、语音识别、语音合成、记忆管理和大语言模型的桌面助手。项目支持 Live2D 虚拟形象驱动，具备口型同步、语音交互、个性化记忆和多模型支持。
+Desktop Tool Assistant 是一个集成虚拟角色、语音识别、语音合成、记忆管理和大语言模型的桌面助手。项目支持 Live2D 虚拟形象驱动，具备口型同步、语音交互、个性化记忆和多模型支持。
 
 ## 主要功能
 - **虚拟角色驱动**：支持 Live2D 模型，角色可根据语音和文本进行动作和表情变化。

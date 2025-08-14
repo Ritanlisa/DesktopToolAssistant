@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from datetime import datetime
-from typing import Literal, Optional, Union, TextIO
+from typing import Literal
+from config import Common_Args
 import sys
 
 # 图标和颜色配置
@@ -37,7 +38,7 @@ else:
         "RESET": "\033[0m",   # 重置样式
     }
 
-log_file = "./log.log"
+log_file = Common_Args.get("LogFile", "log.log")
 
 def log(
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR"],
