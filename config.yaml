@@ -1,0 +1,106 @@
+Common:
+  MemoryFile: ./memory/memory_graph
+  Log_Path: ./log.log
+
+Character:
+  Name: Ritanlisa.Danersaney.Millatiz
+  Born: 01/07/1997
+  Gender: Female
+  Birthplace: Frankfurt, Germany
+  Backstory: Ritanlisa's Backstory
+  Traits:
+  - Trait 1
+  - Trait 2
+  Personalities:
+    MBTI: 
+      Extraversion_Introversion: 75%
+      Sensing_Intuition: 75%
+      Thinking_Feeling: 75%
+      Judging_Perceiving: 25%
+      Conclusion: INFJ
+    PolitiScales:
+      Federal_Unitary: 16%
+      Democracy_Authority: 51%
+      Globalist_Isolationist: 74%
+      Militarist_Pacifist: 44%
+      Security_Freedom: 78%
+      Equality_Markets: 93%
+      Secular_Religious: 83%
+      Progress_Tradition: 91%
+      Assimilationist_Multiculturalist: 57%
+  Significant_Events:
+    - Event 1
+    - Event 2
+    - Event 3
+  Interests:
+    - Interest 1
+    - Interest 2
+    - Interest 3
+  Significant_Characters:
+    - Name: Daffeny
+      Gender: Female
+      Relationship: Friend
+      Events:
+        - Event A1
+        - Event A2
+        - Event A3
+    - Name: Ashley
+      Gender: Female
+      Relationship: Friend
+      Events:
+        - Event B1
+        - Event B2
+        - Event B3
+
+MemoryManager:
+  k: 128
+  epochs: 200
+  batches_count: 20
+  eta: 10
+  embedding_model_params: 
+    normalize_ent_emb: True
+
+LLM_Full:
+  type: openAI
+  model: deepseek-reasoner
+  base_url: https://api.deepseek.com
+  api_key: sk-682f17736571491082a2245663a8882c
+  support_cot: True
+
+LLM_Small:
+  type: ollama
+  model: DeepSeek-R1:8B
+  base_url: http://localhost:11434
+  api_key: your_api_key_here
+  support_cot: True
+
+Display:
+  type: live2D
+  model: your_live2D_model_here
+  model_path: ./Live2DModels/hiyori_free_zh/runtime/hiyori_free_t08.model3.json
+  model_version: v3
+  canvas_width: 800
+  canvas_height: 600
+  window_pos: (300, 200)
+
+Audio:
+  type: chatTTS
+  source: huggingface
+  force_redownload: True
+  compile: True
+  custom_path: null
+  device: null
+  coef: null
+  use_flash_attn: False
+  use_vllm: False
+  experimental: False
+
+SpeechRecognition:
+  type: wisper
+  model_size: base
+  silence_threshold: -40
+  min_silence_duration: 0.5
+  sample_rate: 16000
+
+Prompts:
+  Avatar_Gen: "You need to summon a prompt for a virtual character(do not mention this), the information of the character will be provided as follows:"

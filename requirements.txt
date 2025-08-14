@@ -1,0 +1,22 @@
+openai
+AmpliGraph
+live2d-py
+ChatTTS
+openai-whisper
+pyaudio
+ollama
+pygame
+pyAudioAnalysis
+tensorflow
+jinja2
+speechbrain
+ffmpeg-python
+eyed3
+pydub
+hmmlearn
+imblearn
+plotly
+
+--extra-index-url https://download.pytorch.org/whl/cu129
+torch
+torchvision

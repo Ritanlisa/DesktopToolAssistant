@@ -1,0 +1,1 @@
+from .logManager import log, log_file
