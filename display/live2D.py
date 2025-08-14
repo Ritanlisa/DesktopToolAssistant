@@ -6,8 +6,18 @@ import queue
 import sys
 import ctypes
 from typing import Literal, Tuple
-from pygame.locals import *
-from OpenGL.GL import *
+from pygame.locals import DOUBLEBUF, OPENGL
+from OpenGL.GL import (
+    GL_COLOR_BUFFER_BIT,
+    GL_DEPTH_BUFFER_BIT,
+    glClear,
+    glEnable,
+    GL_BLEND,
+    glBlendFunc,
+    GL_SRC_ALPHA,
+    GL_ONE_MINUS_SRC_ALPHA,
+    glClearColor,
+)
 
 import live2d.v2 as live2dv2
 from live2d.v2 import StandardParams as StandardParamsv2
@@ -20,25 +30,29 @@ from live2d.v3 import MotionPriority as MotionPriorityv3
 from .general import DisplayerType
 from log import log
 
+
 class Live2DModel:
     """封装 Live2D 模型的加载、渲染和逻辑。"""
 
     def __init__(
-        self, model_path: str, canvas_width: int = 800, canvas_height: int = 600, model_type: Literal["v2", "v3"] = "v3"
+        self,
+        model_path: str,
+        canvas_width: int = 800,
+        canvas_height: int = 600,
+        model_type: Literal["v2", "v3"] = "v3",
     ):
         self.model_type = model_type
-        
+
         if model_type == "v2":
             self.model = live2dv2.LAppModel()
         elif model_type == "v3":
-            display = (800,600)
-            pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
+            display = (800, 600)
+            pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
             live2dv3.glewInit()
             self.model = live2dv3.LAppModel()
         else:
             raise ValueError("Unsupported model type. Use 'v2' or 'v3'.")
 
-        
         log("INFO", "Live2D", f"Loading model from {model_path}")
         self.model.LoadModelJson(model_path)
         self.model.Resize(canvas_width, canvas_height)
@@ -99,7 +113,7 @@ class live2D_displayer:
         window_pos: Tuple[int, int] = (100, 100),
         type: Literal["live2D", "Live2D"] = "Live2D",
         model_version: Literal["v2", "v3"] = "v3",
-        **kwargs
+        **kwargs,
     ):
         self.model_path: str = model_path
         self.canvas_width: int = canvas_width
@@ -157,42 +171,44 @@ class live2D_displayer:
 
         # 创建无边框透明窗口
         flags = pygame.DOUBLEBUF | pygame.OPENGL | pygame.NOFRAME
-        
+
         # 跨平台透明窗口设置
         if sys.platform == "win32":
             # Windows透明窗口设置
             pygame.display.gl_set_attribute(pygame.GL_ALPHA_SIZE, 8)
             self.screen = pygame.display.set_mode(
-                (self.canvas_width, self.canvas_height),
-                flags
+                (self.canvas_width, self.canvas_height), flags
             )
-            
+
             # 设置窗口透明
             hwnd = pygame.display.get_wm_info()["window"]
             user32 = ctypes.windll.user32
-            
+
             # 设置窗口样式为分层窗口（透明）
             GWL_EXSTYLE = -20
             WS_EX_LAYERED = 0x00080000
             WS_EX_TRANSPARENT = 0x00000020
             ex_style = user32.GetWindowLongA(hwnd, GWL_EXSTYLE)
-            user32.SetWindowLongA(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT)
-            
+            user32.SetWindowLongA(
+                hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT
+            )
+
             # 设置透明度
             LWA_ALPHA = 0x00000002
             user32.SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA)
-            
+
             # 设置窗口位置
             user32.SetWindowPos(
                 hwnd, -1, self.window_pos[0], self.window_pos[1], 0, 0, 0x0001
             )
         else:
             # Linux/MacOS透明窗口设置
-            os.environ['SDL_VIDEO_WINDOW_POS'] = f"{self.window_pos[0]},{self.window_pos[1]}"
+            os.environ["SDL_VIDEO_WINDOW_POS"] = (
+                f"{self.window_pos[0]},{self.window_pos[1]}"
+            )
             pygame.display.gl_set_attribute(pygame.GL_ALPHA_SIZE, 8)
             self.screen = pygame.display.set_mode(
-                (self.canvas_width, self.canvas_height),
-                flags
+                (self.canvas_width, self.canvas_height), flags
             )
 
         log("INFO", "Live2D", "Live2D Windows Created and Settled.")
@@ -207,7 +223,12 @@ class live2D_displayer:
         # 加载模型
         if os.path.exists(self.model_path):
             log("WARNING", "Live2D", f"Loading Live2D model from {self.model_path}")
-            self.model = Live2DModel(self.model_path, self.canvas_width, self.canvas_height, self.model_version)
+            self.model = Live2DModel(
+                self.model_path,
+                self.canvas_width,
+                self.canvas_height,
+                self.model_version,
+            )
         else:
             log("ERROR", "Live2D", f"Model file not found: {self.model_path}")
             return
@@ -248,22 +269,21 @@ class live2D_displayer:
                     current_pos = pygame.mouse.get_pos()
                     dx = current_pos[0] - last_mouse_pos[0]
                     dy = current_pos[1] - last_mouse_pos[1]
-                    
+
                     # 更新窗口位置（跨平台）
                     window_x += dx
                     window_y += dy
-                    
+
                     # 设置新位置
                     if sys.platform == "win32":
                         user32.SetWindowPos(hwnd, -1, window_x, window_y, 0, 0, 0x0001)
                     else:
                         # Linux/MacOS设置窗口位置
-                        os.environ['SDL_VIDEO_WINDOW_POS'] = f"{window_x},{window_y}"
+                        os.environ["SDL_VIDEO_WINDOW_POS"] = f"{window_x},{window_y}"
                         pygame.display.set_mode(
-                            (self.canvas_width, self.canvas_height),
-                            flags
+                            (self.canvas_width, self.canvas_height), flags
                         )
-                    
+
                     last_mouse_pos = current_pos
 
             # 更新模型口型
@@ -271,7 +291,7 @@ class live2D_displayer:
             self.model.update(delta_time)
 
             # 渲染
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
             self.model.draw()
             pygame.display.flip()
 

@@ -15,10 +15,14 @@ class ChatTTS_VoiceGen:
     def __init__(self,
                  lip_sync_interface: LipSyncInterface,
                  type: Literal["chatTTS", "ChatTTS"] = "ChatTTS",
+                 audio_seed: int = 300,
+                 temperature: float = 0.3,
+                 top_P: float = 0.7,
+                 top_K: int = 40,
                  source: Literal["huggingface", "local", "custom"] = "local",
                  force_redownload: bool = False,
                  compile: bool = True,
-                 custom_path: Optional[FileLike] = None,
+                 custom_path: Optional[FileLike] = None, # type: ignore
                  device: Optional[torch.device] = None,
                  coef: Optional[torch.Tensor] = None,
                  use_flash_attn: bool = False,
@@ -29,6 +33,10 @@ class ChatTTS_VoiceGen:
         self.chat = ChatTTS.Chat()
         self.chat.load(source=source, force_redownload=force_redownload, compile=compile, custom_path=custom_path, device=device, coef=coef, use_flash_attn=use_flash_attn, use_vllm=use_vllm, experimental=experimental, **kwargs)
         self.lip_sync_interface = lip_sync_interface
+        self.temperature = temperature
+        self.top_P = top_P
+        self.top_K = top_K
+        self.audio_seed = audio_seed
 
     def speak(self, text: str):
         """生成并播放语音，同时计算实时RMS值"""
@@ -43,10 +51,10 @@ class ChatTTS_VoiceGen:
         # 生成参数
         params_infer_code = ChatTTS.Chat.InferCodeParams(
             spk_emb=text,
-            temperature=0.3,
-            top_P=0.7,
-            top_K=20,
-            manual_seed=400,
+            temperature=self.temperature,
+            top_P=self.top_P,
+            top_K=self.top_K,
+            manual_seed=self.audio_seed,
         )
         
         params_refine_text = ChatTTS.Chat.RefineTextParams(

@@ -85,6 +85,11 @@ Display:
 
 Audio:
   type: chatTTS
+  audio_seed: 400
+  audio_seed: 300
+  temperature: 0.3
+  top_P: 0.7
+  top_K: 40
   source: huggingface
   force_redownload: True
   compile: True

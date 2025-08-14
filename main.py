@@ -9,10 +9,10 @@ from speechRecognize.general import SpeechRecog
 from memory.AmpliGraph import MemoryManager
 from Characteristic.Avatar import Avatar
 from lipsync import LipSyncInterface
-from log import log, log_file
+from log import log
 import time
 
-from config import *
+from config import Display_Args, Audio_Args, SpeechRecog_Args, LLM_Full_Args, LLM_Small_Args, MM_Args, Common_Args, Prompts, Character
 
 # 1. initialize: Display Live2D model, run subthreads, load memory
 
@@ -42,24 +42,26 @@ log("INFO", "System", "Components initialized successfully.")
 
 log("INFO", "System", f"Loaded character: \n\n{avatar.get_summary()}\n")
 
-# # generating Prompts:
-# Avatar_prompt = text_gen.generate(
-#     messages=[
-#         {
-#             "role": "system",
-#             "content": Prompts.get(
-#                 "Avatar_Gen",
-#                 "You need to summon a prompt for a virtual character(do not mention this), the information of the character will be provided as follows:",
-#             ),
-#         },
-#         {
-#             "role": "user",
-#             "content": avatar.get_summary(),
-#         }
-#     ]
-# )
+# generating Prompts:
+Avatar_prompt = text_gen.generate(
+    messages=[
+        {
+            "role": "system",
+            "content": Prompts.get(
+                "Avatar_Gen",
+                "You need to summon a prompt for a virtual character(do not mention this), the information of the character will be provided as follows:",
+            ),
+        },
+        {
+            "role": "user",
+            "content": avatar.get_summary(),
+        }
+    ]
+)
 
-# print(Avatar_prompt)
+log("INFO", "System", f"Generated Avatar Prompt: {Avatar_prompt}")
+
+
 # exit(0)
 
 # ***************************************************************************************************
