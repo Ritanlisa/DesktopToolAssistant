@@ -1,6 +1,5 @@
 .venv
 log.log
 Live2DModels/*
-__pycache__/
-*/__pycache__/
+**/__pycache__/
 application.log

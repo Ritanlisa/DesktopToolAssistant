@@ -3,6 +3,8 @@ import os
 import pygame
 import threading
 import queue
+import sys
+import ctypes
 from typing import Literal
 from pygame.locals import *
 from OpenGL.GL import *
@@ -15,7 +17,6 @@ import live2d.v3 as live2dv3
 from live2d.v3 import StandardParams as StandardParamsv3
 from live2d.v3 import MotionPriority as MotionPriorityv3
 
-import ctypes
 from .general import DisplayerType
 from log import log
 
@@ -115,6 +116,7 @@ class live2D_displayer:
 
         # 创建窗口线程
         self.thread = threading.Thread(target=self._run_window)
+        self.thread.daemon = True
         self.thread.start()
 
         # 命令队列
@@ -154,21 +156,46 @@ class live2D_displayer:
         log("INFO", "Live2D", "Live2D Initialized.")
 
         # 创建无边框透明窗口
-        self.screen = pygame.display.set_mode(
-            (self.canvas_width, self.canvas_height),
-            pygame.DOUBLEBUF | pygame.OPENGL | pygame.NOFRAME,
-        )
+        flags = pygame.DOUBLEBUF | pygame.OPENGL | pygame.NOFRAME
+        
+        # 跨平台透明窗口设置
+        if sys.platform == "win32":
+            # Windows透明窗口设置
+            pygame.display.gl_set_attribute(pygame.GL_ALPHA_SIZE, 8)
+            self.screen = pygame.display.set_mode(
+                (self.canvas_width, self.canvas_height),
+                flags
+            )
+            
+            # 设置窗口透明
+            hwnd = pygame.display.get_wm_info()["window"]
+            user32 = ctypes.windll.user32
+            
+            # 设置窗口样式为分层窗口（透明）
+            GWL_EXSTYLE = -20
+            WS_EX_LAYERED = 0x00080000
+            WS_EX_TRANSPARENT = 0x00000020
+            ex_style = user32.GetWindowLongA(hwnd, GWL_EXSTYLE)
+            user32.SetWindowLongA(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT)
+            
+            # 设置透明度
+            LWA_ALPHA = 0x00000002
+            user32.SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA)
+            
+            # 设置窗口位置
+            user32.SetWindowPos(
+                hwnd, -1, self.window_pos[0], self.window_pos[1], 0, 0, 0x0001
+            )
+        else:
+            # Linux/MacOS透明窗口设置
+            os.environ['SDL_VIDEO_WINDOW_POS'] = f"{self.window_pos[0]},{self.window_pos[1]}"
+            pygame.display.gl_set_attribute(pygame.GL_ALPHA_SIZE, 8)
+            self.screen = pygame.display.set_mode(
+                (self.canvas_width, self.canvas_height),
+                flags
+            )
 
-        log("INFO", "Live2D", "Live2D Windows Created.")
-
-        # 设置窗口位置
-        user32 = ctypes.windll.user32
-        hwnd = pygame.display.get_wm_info()["window"]
-        user32.SetWindowPos(
-            hwnd, -1, self.window_pos[0], self.window_pos[1], 0, 0, 0x0001
-        )
-
-        log("INFO", "Live2D", "Live2D Windows Settled.")
+        log("INFO", "Live2D", "Live2D Windows Created and Settled.")
 
         # 设置透明背景
         glEnable(GL_BLEND)
@@ -188,6 +215,8 @@ class live2D_displayer:
         # 窗口拖动状态
         dragging = False
         last_mouse_pos = (0, 0)
+        # 当前窗口位置（手动维护）
+        window_x, window_y = self.window_pos
 
         clock = pygame.time.Clock()
 
@@ -219,8 +248,22 @@ class live2D_displayer:
                     current_pos = pygame.mouse.get_pos()
                     dx = current_pos[0] - last_mouse_pos[0]
                     dy = current_pos[1] - last_mouse_pos[1]
-                    x, y = self.screen.get_window_position()
-                    self.screen.set_window_position(x + dx, y + dy)
+                    
+                    # 更新窗口位置（跨平台）
+                    window_x += dx
+                    window_y += dy
+                    
+                    # 设置新位置
+                    if sys.platform == "win32":
+                        user32.SetWindowPos(hwnd, -1, window_x, window_y, 0, 0, 0x0001)
+                    else:
+                        # Linux/MacOS设置窗口位置
+                        os.environ['SDL_VIDEO_WINDOW_POS'] = f"{window_x},{window_y}"
+                        pygame.display.set_mode(
+                            (self.canvas_width, self.canvas_height),
+                            flags
+                        )
+                    
                     last_mouse_pos = current_pos
 
             # 更新模型口型
