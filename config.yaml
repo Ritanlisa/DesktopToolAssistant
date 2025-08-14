@@ -81,7 +81,7 @@ Display:
   model_version: v3
   canvas_width: 800
   canvas_height: 600
-  window_pos: (300, 200)
+  window_pos: [300, 200]
 
 Audio:
   type: chatTTS

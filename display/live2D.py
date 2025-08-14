@@ -5,7 +5,7 @@ import threading
 import queue
 import sys
 import ctypes
-from typing import Literal
+from typing import Literal, Tuple
 from pygame.locals import *
 from OpenGL.GL import *
 
@@ -96,18 +96,18 @@ class live2D_displayer:
         model_path: str,
         canvas_width: int = 800,
         canvas_height: int = 600,
-        window_pos: tuple = (100, 100),
+        window_pos: Tuple[int, int] = (100, 100),
         type: Literal["live2D", "Live2D"] = "Live2D",
         model_version: Literal["v2", "v3"] = "v3",
         **kwargs
     ):
-        self.model_path = model_path
-        self.canvas_width = canvas_width
-        self.canvas_height = canvas_height
-        self.window_pos = window_pos
-        self.lip_sync_value = 0.0
-        self.running = True
-        self.model_version = model_version
+        self.model_path: str = model_path
+        self.canvas_width: int = canvas_width
+        self.canvas_height: int = canvas_height
+        self.window_pos: Tuple[int, int] = window_pos
+        self.lip_sync_value: float = 0.0
+        self.running: bool = True
+        self.model_version: Literal["v2", "v3"] = model_version
 
         # 注册口型同步回调
         self.lip_sync_interface = kwargs.get("lip_sync_interface", None)
