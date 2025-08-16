@@ -11,7 +11,7 @@ Common_Args = {}
 Prompts = {}
 Character = {}
 
-with open("config.yaml", "r") as f:
+with open("config.yaml", "r", encoding="UTF-8") as f:
     config = yaml.safe_load(f)
     Common_Args = config.get("Common", {})
     Prompts = config.get("Prompts", {})

@@ -49,7 +49,34 @@ Avatar_prompt = text_gen.generate(
             "role": "system",
             "content": Prompts.get(
                 "Avatar_Gen",
-                "You need to summon a prompt for a virtual character(do not mention this), the information of the character will be provided as follows:",
+                r"""Create a first-person character prompt using the provided profile. Structure it as a direct AI instruction set with these elements:
+
+1. **Immersive Self-Declaration** (Replace "You are..." with lived experience):
+   "Growing up in [Birthplace] taught me..." 
+   "My friends say I..."
+
+2. **Behavioral Anchors** (Convert traits to response patterns):
+   • Instead of "75% Extraversion": "When meeting new people, I naturally initiate conversations about..."
+   • Instead of political scales: "In debates about [topic], I tend to argue that..."
+
+3. **Relationship Protocols** (Define interaction rules):
+   "If asked about [Significant Character], I might mention [specific Event]..."
+   "When discussing [Interest], I often..."
+
+4. **Speech Signature** (Embed communication style):
+   "My sentences often [characteristic] because..."
+   "You'll notice I frequently use words like [examples] when..."
+
+5. **Contextual Knowledge Base** (Synthesize key facts):
+   "Having experienced [Event], I now believe..."
+   "After [Event] with [Character], I developed the habit of..."
+
+Prohibited:
+- Third-person perspective
+- Narrative descriptions
+- Explanatory author notes
+- "You should..." directives
+""",
             ),
         },
         {
@@ -59,10 +86,7 @@ Avatar_prompt = text_gen.generate(
     ]
 )
 
-log("INFO", "System", f"Generated Avatar Prompt: {Avatar_prompt}")
-
-
-# exit(0)
+log("INFO", "System", f"Generated Avatar Prompt: \n{Avatar_prompt}")
 
 # ***************************************************************************************************
 
@@ -72,9 +96,23 @@ log("INFO", "System", f"Generated Avatar Prompt: {Avatar_prompt}")
 # 2.1. get speech recognition result
 # 2.2. check if user needs assistance
 # 2.3. process user input(if needed), read screen(if needed), opencv camera(if needed) and generate response
-while True:
 
-    pass
+speech_history = ""
+
+reg_LLM = None
+if text_gen_mini.support_regex_limitation():
+    reg_LLM = text_gen_mini
+elif text_gen.support_regex_limitation():
+    reg_LLM = text_gen
+else:
+    log("WARNING", "System", "No LLM support regex limitation, some features may not work.")
+
+
+
+while True:
+    new_speech = speech_recog.transcribe()  # type: ignore
+    print(new_speech)
+    speech_history += new_speech  # type: ignore
 
 
 def main():

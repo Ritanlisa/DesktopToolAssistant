@@ -1,6 +1,8 @@
+import re
 from typing import Iterable, Literal
 import openai
 from .general import TextGenType
+from log import log
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
 @TextGenType("openAI")
@@ -15,8 +17,11 @@ class openAI_Gen:
     @staticmethod
     def support_regex_limitation():
         return False
+        
+    def support_chain_of_thought(self):
+        return self.support_cot
     
-    def generate(self, messages : Iterable[ChatCompletionMessageParam] = [], regex: str = "") -> str:
+    def generate(self, messages : Iterable[ChatCompletionMessageParam] = [], regex: str = "", autoCOT: bool = True) -> str:
         if messages is None:
             messages = []
 
@@ -25,4 +30,13 @@ class openAI_Gen:
             messages=messages
         )
 
-        return response.choices[0].message.content
+        result: str = response.choices[0].message.content # type: ignore
+        
+        if autoCOT:
+            match = re.search(r"^<think>\s*(.*)\s*</think>\s*(.*)\s*$", result)
+            if match:
+                # If we found a match, we can use it
+                log("INFO", "OpenAI LLM", f"LLM Thought:{match.group(1)}")
+                result = match.group(2)
+
+        return result

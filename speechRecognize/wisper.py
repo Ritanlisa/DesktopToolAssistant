@@ -9,6 +9,7 @@ import numpy as np
 import whisper
 from pyAudioAnalysis import audioBasicIO as aIO
 from pyAudioAnalysis import audioSegmentation as aS
+from pyAudioAnalysis import ShortTermFeatures as aF
 import pyaudio
 from .general import SpeechRecogType
 
@@ -66,7 +67,8 @@ class VoiceRecognitionSystem:
         
         # 使用pyAudioAnalysis提取基本特征
         [fs, x] = aIO.read_audio_file('temp.wav')
-        f, f_names = aS.mid_feature_extraction(x, fs, 1, 1)
+        # 使用正确的特征提取函数
+        f, f_names = aF.mid_feature_extraction(x, fs, 1, 1) # type: ignore
         return np.mean(f, axis=1)
 
     def identify_speaker(self, audio_segment):
@@ -117,6 +119,8 @@ class VoiceRecognitionSystem:
             
             # 检测当前块是否为静音
             rms = np.sqrt(np.mean(audio_chunk**2))
+            # c:\Users\Ritanlisa\Desktop\DesktopToolAssistant\speechRecognize\wisper.py:121: RuntimeWarning: invalid value encountered in sqrt
+            # rms = np.sqrt(np.mean(audio_chunk**2))
             db = 20 * np.log10(rms) if rms > 0 else -100
             
             if db < self.silence_threshold:
@@ -163,7 +167,7 @@ class VoiceRecognitionSystem:
                 # 使用Whisper进行语音识别
                 audio = audio_segment.astype(np.float32) / 32768.0
                 result = self.whisper_model.transcribe(audio, language="zh")
-                text = result["text"].strip()
+                text = result["text"].strip() # type: ignore
                 
                 if text:
                     # 将结果放入输出队列
@@ -212,7 +216,7 @@ class VoiceRecognitionSystem:
             speaker_id = self.identify_speaker(self.audio_buffer)
             audio = self.audio_buffer.astype(np.float32) / 32768.0
             result = self.whisper_model.transcribe(audio, language="zh")
-            text = result["text"].strip()
+            text = result["text"].strip() # type: ignore
             
             if text:
                 self.result_queue.put({

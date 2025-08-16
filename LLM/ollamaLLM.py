@@ -5,6 +5,7 @@ from typing import Any, Literal, Mapping, Optional, Sequence, Union
 from ollama import Client, Message, ChatResponse
 from pydantic.json_schema import JsonSchemaValue
 from .general import TextGenType
+from log import log
 
 @TextGenType("ollama")
 class ollama_Gen:
@@ -24,8 +25,11 @@ class ollama_Gen:
     def support_regex_limitation():
         return True
     
+    def support_chain_of_thought(self):
+        return self.support_cot
+    
     @staticmethod
-    def __regex_formatter(regex_expression: str):
+    def __regex_formatter(regex_expression: str, auto_cot: bool):
         # 1. check regex expression if it's valid
         try:
             re.compile(regex_expression)
@@ -38,7 +42,11 @@ class ollama_Gen:
         if not regex_expression.endswith("$"):
             regex_expression = regex_expression + "$"
         
-        # 3. replace expressions which will touch bugs
+        # 3. add cot if needed
+        if auto_cot and not regex_expression.find("</think>"):
+            regex_expression = r"^<think>\s*(.*)\s*</think>\s*" + regex_expression[1:]
+        
+        # 4. replace expressions which will touch bugs
         # i. (?:) -> () 
         regex_expression = regex_expression.replace(r"(?:" , r"(")
         # ii. \d -> [0-9]
@@ -58,13 +66,13 @@ class ollama_Gen:
             raise AssertionError(f"Invalid regex occurred after formatted regex: {regex_expression}")
         return regex_expression
 
-    def generate(self, messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None, regex: str = "") -> str:
+    def generate(self, messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None, regex: str = "", autoCOT: bool = True) -> str:
         if regex == "":
             response: ChatResponse = self.client.chat(
                 model=self.model,
                 messages=messages
             )
-            return response['message']['content']
+            result: str = response.choices[0].message.content # type: ignore
         else:
             # Generate without regex constraint first
             response: ChatResponse = self.client.chat(
@@ -72,7 +80,14 @@ class ollama_Gen:
                 messages=messages,
                 format=JsonSchemaValue({
                     "type": "string",
-                    "pattern": ollama_Gen.__regex_formatter(regex)
+                    "pattern": ollama_Gen.__regex_formatter(regex, auto_cot=autoCOT)
                 })
             )
-            return response['message']['content'][1:-1]
+            result: str =  response['message']['content'][1:-1]
+        if autoCOT:
+            match = re.search(r"^<think>\s*(.*)\s*</think>\s*(.*)\s*$", result)
+            if match:
+                # If we found a match, we can use it
+                log("INFO", "ollama LLM", f"LLM Thought:{match.group(1)}")
+                result = match.group(2)
+        return result

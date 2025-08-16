@@ -146,12 +146,14 @@ class Personalities(BaseModel):
 class SignificantCharacter(BaseModel):
     Name: str
     Gender: Literal["Male", "Female"]
+    Birthplace: str
     Relationship: str
     Events: List[str]
 
     def get_summary(self, layer: int = 0) -> str:
         summary = "\t" * layer + f"Name: {self.Name}\n"
         summary += "\t" * layer + f"Gender: {self.Gender}\n"
+        summary += "\t" * layer + f"Birthplace: {self.Birthplace}\n"
         summary += "\t" * layer + f"Relationship: {self.Relationship}\n"
         summary += (
             "\t" * layer
